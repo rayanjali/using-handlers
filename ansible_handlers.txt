@@ -1,0 +1,40 @@
+- hosts: all
+  tasks:
+  - yum_repository:
+      baseurl: "/run/media/root/RHEL-8-1-0-BaseOS-x86_64/AppStream"
+      name: "mydvd1"
+      description: "myyum dvd1 for package"
+      gpgcheck: no
+  - yum_repository:
+      baseurl: "/run/media/root/RHEL-8-1-0-BaseOS-x86_64/BaseOS"
+      name: "mydvd2"
+      description: "myyum dvd2 for package"
+      gpgcheck: no
+  - package:
+      name: "httpd"
+      state: present
+  - file:
+      state: directory
+      path: "/var/www/lw"
+  - copy:
+      dest: "/var/www/lw/index.html"
+      content: "This is new web site\n"
+  - template:
+      dest: "/etc/httpd/conf.d/lw.conf"
+      src: "lw.conf"
+    notify: web services
+  - name: starting httpd service
+    service:
+      name: "httpd"
+      state: started
+  - firewalld:
+      port: 8081/tcp
+      state: enabled
+      permanent: yes
+      immediate: yes
+  handlers:
+  - name: web services
+    service:
+      name: "httpd"
+      state: restarted
+      enabled: yes
